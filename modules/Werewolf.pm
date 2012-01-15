@@ -141,7 +141,7 @@ sub cmd_wolf {
                     $PLAYERS{lc $src->{nick}} = 0;
                     $NICKS{lc $src->{nick}} = $src->{nick};
                     $GAMETIME = time;
-                    $WAIT = 60;
+                    $WAIT = 999999999999;
                     $WAITED = 0;
                     # Start wait timer.
                     timer_add('werewolf.joinwait', 2, 1, sub {
@@ -250,12 +250,7 @@ sub cmd_wolf {
                     return;
                 }
 
-                # Check join wait time.
-                if ($WAIT) {
-                    privmsg($src->{svr}, $src->{chan}, "$src->{nick}: Please wait at least \2$WAIT\2 more seconds.");
-                    return;
-                }
-
+ 
                 # Need four or more players.
                 if (keys %PLAYERS < 4) {
                     privmsg($src->{svr}, $src->{chan}, "$src->{nick}: Four or more players are required to play.");
@@ -381,7 +376,7 @@ sub cmd_wolf {
                 # Delete waiting timer.
                 timer_del('werewolf.joinwait');
                 # Start timer for bed checking.
-                timer_add('werewolf.chkbed', 2, 5, \&M::Werewolf::_chkbed);
+                #timer_add('werewolf.chkbed', 2, 5, \&M::Werewolf::_chkbed);
                 # Initialize the nighttime.
                 _init_night();
             }
@@ -1056,7 +1051,7 @@ sub _init_night {
     foreach my $plyr (keys %PLAYERS) {
         my $role = $PLAYERS{$plyr};
         # Check if they have a special role.
-        if ($role =~ m/(w|h|s|g|d|t)/xsm) {
+        if ($role =~ m/(w|h|s|g|d|t|v)/xsm) {
             my ($erole, $msg);
             # For wolves.
             if ($role =~ m/w/xsm) {
@@ -1092,6 +1087,9 @@ sub _init_night {
                 $erole = 'traitor';
                 $msg = "You are a villager, but are on the side of the wolves. You're exactly like a villager and not even a seer can see your true identity. Only detectives can.\n&pi&";
                 $msg .= "\nAll your messages are relayed to the wolves and vice versa, but, to contact the wolves, consider using PM's or a channel to speak with them rather than my relay, to prevent from me lagging.";
+            } elsif ($role =~ m/v/xsm) {
+                $erole = 'villager';
+                $msg = "Try to sit back, relax, and wait patiently for morning.";
             }
 
             # Split message at \n.
@@ -1134,12 +1132,12 @@ sub _init_night {
     %LYNCH = ();
     $DETECTED = 0;
     if (!$clockd) {
-        privmsg($gsvr, $gchan, 'It is now nighttime. All players check for PMs from me for instructions. If you did not receive one, simply sit back, relax, and wait patiently for morning.');
+        privmsg($gsvr, $gchan, 'It is now nighttime. All players check for PMs from me for instructions.');
     }
     else {
-        privmsg($gsvr, $gchan, $clockd.' It is now nighttime. All players check for PMs from me for instructions. If you did not receive one, simply sit back, relax, and wait patiently for morning.');
+        privmsg($gsvr, $gchan, $clockd.' It is now nighttime. All players check for PMs from me for instructions.');
     }
-    timer_add('werewolf.goto_daytime', 1, 90, sub { M::Werewolf::_init_day() });
+    timer_add('werewolf.goto_daytime', 1, 9999999, sub { M::Werewolf::_init_day() });
     $GOAT = 0;
 
     return 1;
@@ -1597,7 +1595,7 @@ sub _gameover {
 
     # Clear all variables.
     if ($PHASE) { if ($PHASE eq 'n') { timer_del('werewolf.goto_daytime') } }
-    timer_del('werewolf.chkbed');
+    #timer_del('werewolf.chkbed');
     timer_del('werewolf.joinwait');
     $GAME = $PGAME = $GAMECHAN = $GAMETIME = $PHASE = $SEEN = $VISIT = $GUARD = $LVOTEN = $BULLETS = $DETECTED = $WAIT = $WAITED = $LASTTIME = 0;
     %PLAYERS = ();
@@ -2391,7 +2389,7 @@ If you have any questions or generally need help. Best method is to join our
 IRC channel. (See the README)
 
 Feature suggestions and bug reports should be posted to the B/F Tracker at
-http://rm.xelhua.org.
+http://rm.xelhua.org
 
 Due to the great complexity of this module, it would not make sense for it to
 be completely bug-free. So, of course, testing and bug reports are very
